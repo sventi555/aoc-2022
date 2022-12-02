@@ -1,8 +1,7 @@
 use std::fs;
 
 fn main() {
-    let contents = fs::read_to_string("src/input.txt").expect("Missing input file");
-
+    let contents = fs::read_to_string("./day_2/input.txt").expect("Missing input file");
     let parsed_input = contents.split("\n");
 
     // Part A (X = rock, Y = paper, Z = scissors)
