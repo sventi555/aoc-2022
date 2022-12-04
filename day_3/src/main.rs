@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 use utils::read_lines;
 
 fn ascii_to_prio(c: &char) -> Option<u32> {
-    let code = c.clone() as u32;
+    let code = *c as u32;
 
     match code {
         65..=90 => Some(code - 38),
@@ -84,7 +84,7 @@ fn part_b_alt() {
 
     let badge_sum = read_lines("./day_3/input.txt")
         .fold(Vec::new(), |mut groups: Vec<Vec<String>>, member| {
-            if groups.len() == 0 || groups.last().unwrap().len() == 3 {
+            if groups.is_empty() || groups.last().unwrap().len() == 3 {
                 groups.push(Vec::new());
             }
 

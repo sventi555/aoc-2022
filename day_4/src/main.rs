@@ -11,7 +11,7 @@ impl FromStr for Assignment {
     type Err = ParseAssignmentPairError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let endpoints: Vec<&str> = s.split("-").collect();
+        let endpoints: Vec<&str> = s.split('-').collect();
         if endpoints.len() != 2 {
             return Err(ParseAssignmentPairError {});
         }
@@ -46,7 +46,7 @@ impl FromStr for AssignmentPair {
     type Err = ParseAssignmentPairError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let assignments: Vec<&str> = s.split(",").collect();
+        let assignments: Vec<&str> = s.split(',').collect();
         if assignments.len() != 2 {
             return Err(ParseAssignmentPairError {});
         }
