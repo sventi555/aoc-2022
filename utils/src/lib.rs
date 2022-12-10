@@ -9,3 +9,11 @@ where
     let file = File::open(filename).unwrap();
     io::BufReader::new(file).lines().map(|line| line.unwrap())
 }
+
+pub fn abs(val: i32) -> i32 {
+    if val < 0 {
+        -val
+    } else {
+        val
+    }
+}
