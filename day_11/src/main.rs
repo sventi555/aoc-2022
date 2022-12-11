@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, cell::RefCell, num::ParseIntError, str::FromStr};
+use std::{cell::RefCell, num::ParseIntError, str::FromStr};
 
 use utils::read_lines;
 
@@ -53,6 +53,7 @@ impl Monkey {
     }
 
     fn take_turn_b(&mut self, monkeys: &Vec<RefCell<Monkey>>, modulo: u64) {
+        // don't chill out, and use modulo arithmetic to prevent overflow
         self.worry();
         self.inspected += self.items.len() as u32;
         self.throw_b(monkeys, modulo);
@@ -178,7 +179,7 @@ fn part_b() {
         .map(|chunk| RefCell::new(chunk.into()))
         .collect();
 
-    let modulo = monkeys
+    let lowest_common_mult = monkeys
         .iter()
         .map(|monkey| monkey.borrow().test_val)
         .fold(1, |prod, val| prod * val);
@@ -186,7 +187,9 @@ fn part_b() {
     for _ in 0..10000 {
         for monkey in &monkeys {
             // update the items
-            monkey.borrow_mut().take_turn_b(&monkeys, modulo as u64);
+            monkey
+                .borrow_mut()
+                .take_turn_b(&monkeys, lowest_common_mult as u64);
         }
     }
 
