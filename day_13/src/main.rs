@@ -117,6 +117,56 @@ fn part_a() {
     println!("{}", ordered_index_sum);
 }
 
+fn part_b() {
+    let mut packets: Vec<Packet> = read_lines("./day_13/input.txt")
+        .filter(|line| line != "")
+        .map(|line| build_packet(&line.chars().collect(), &mut 0))
+        .collect();
+
+    packets.push(Packet {
+        val: None,
+        packets: vec![Packet {
+            val: Some(2),
+            packets: vec![],
+        }],
+    });
+
+    packets.push(Packet {
+        val: None,
+        packets: vec![Packet {
+            val: Some(6),
+            packets: vec![],
+        }],
+    });
+
+    packets.sort_by(|a, b| {
+        if let Some(ordered) = are_packets_ordered(a, b) {
+            if ordered {
+                std::cmp::Ordering::Less
+            } else {
+                std::cmp::Ordering::Greater
+            }
+        } else {
+            std::cmp::Ordering::Equal
+        }
+    });
+
+    // packets.iter().for_each(|packet| println!("{:#?}", packet));
+
+    let decoder = packets
+        .iter()
+        .enumerate()
+        .filter(|(_, packet)| {
+            packet.val.is_none()
+                && packet.packets.len() == 1
+                && packet.packets[0].val.is_some()
+                && (packet.packets[0].val.unwrap() == 2 || packet.packets[0].val.unwrap() == 6)
+        })
+        .fold(1, |acc, (index, _)| acc * (index + 1));
+
+    println!("{}", decoder);
+}
 fn main() {
     part_a();
+    part_b();
 }
