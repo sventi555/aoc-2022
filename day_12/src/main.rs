@@ -4,7 +4,7 @@ use std::{
     rc::Rc,
 };
 
-use utils::{abs, read_lines};
+use utils::read_lines;
 
 struct Node {
     pos: (usize, usize),

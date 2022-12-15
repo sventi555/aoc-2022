@@ -3,10 +3,10 @@ use std::{collections::HashMap, str::FromStr};
 use utils::read_lines;
 
 enum Command {
-    FILE(u32),
-    DIR(String),
-    CD(String),
-    LS,
+    File(u32),
+    Dir(String),
+    Cd(String),
+    Ls,
 }
 
 impl FromStr for Command {
@@ -15,14 +15,14 @@ impl FromStr for Command {
         let parts: Vec<&str> = s.split(' ').collect();
         match parts[0] {
             "$" => match parts[1] {
-                "cd" => Ok(Command::CD(String::from(parts[2]))),
-                "ls" => Ok(Command::LS),
+                "cd" => Ok(Command::Cd(String::from(parts[2]))),
+                "ls" => Ok(Command::Ls),
                 _ => Err(String::from("invalid command")),
             },
-            "dir" => Ok(Command::DIR(String::from(parts[1]))),
+            "dir" => Ok(Command::Dir(String::from(parts[1]))),
             size => {
                 if let Ok(file_size) = size.parse::<u32>() {
-                    Ok(Command::FILE(file_size))
+                    Ok(Command::File(file_size))
                 } else {
                     Err(String::from("invalid file size"))
                 }
@@ -54,7 +54,7 @@ impl From<&Vec<String>> for Dir {
                 *input_index += 1;
                 let cmd: Command = line.parse().unwrap();
                 match cmd {
-                    Command::CD(path) => {
+                    Command::Cd(path) => {
                         if path == ".." {
                             return dir.size;
                         } else {
@@ -62,10 +62,10 @@ impl From<&Vec<String>> for Dir {
                                 build_dir(dir.children.get_mut(&path).unwrap(), input, input_index);
                         }
                     }
-                    Command::DIR(name) => {
+                    Command::Dir(name) => {
                         dir.children.insert(name, Dir::new());
                     }
-                    Command::FILE(file_size) => {
+                    Command::File(file_size) => {
                         dir.size += file_size;
                     }
                     _ => {}
@@ -90,7 +90,7 @@ impl<'a> IntoIterator for &'a Dir {
     type IntoIter = DirIter<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
-        return DirIter { stack: vec![self] };
+        DirIter { stack: vec![self] }
     }
 }
 

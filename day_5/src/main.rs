@@ -12,10 +12,10 @@ fn swap_axes(v: Vec<Vec<char>>) -> Vec<Vec<char>> {
     }
 
     for row in (0..v.len()).rev() {
-        for col in 0..v[0].len() {
+        for (col, item) in swapped.iter_mut().enumerate().take(v[0].len()) {
             let c = v[row][col];
             if c != ' ' {
-                swapped[col].push(v[row][col]);
+                item.push(v[row][col]);
             }
         }
     }
@@ -29,7 +29,7 @@ fn part_a() {
     let mut stacks: Vec<Vec<char>> = Vec::new();
     let mut instr_start_index = 0;
     for (index, line) in lines.iter().enumerate() {
-        if line == "" {
+        if line.is_empty() {
             instr_start_index = index + 1;
             stacks = swap_axes(stacks);
             break;
@@ -71,7 +71,7 @@ fn part_b() {
     let mut stacks: Vec<Vec<char>> = Vec::new();
     let mut instr_start_index = 0;
     for (index, line) in lines.iter().enumerate() {
-        if line == "" {
+        if line.is_empty() {
             instr_start_index = index + 1;
             stacks = swap_axes(stacks);
             break;

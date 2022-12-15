@@ -64,7 +64,7 @@ fn part_a() {
         }
     }
 
-    let total_visible: u32 = visible_grid.iter().flat_map(|row| row).sum();
+    let total_visible: u32 = visible_grid.iter().flatten().sum();
 
     println!("{}", total_visible);
 }

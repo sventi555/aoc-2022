@@ -20,8 +20,8 @@ fn build_packet(input: &Vec<char>, index_in_input: &mut usize) -> Packet {
             ',' => {}
             _ => {
                 let mut next_non_number_index = 0;
-                for i in (*index_in_input + 1)..input.len() {
-                    if !input[i].is_numeric() {
+                for (i, c) in input.iter().enumerate().skip(*index_in_input + 1) {
+                    if !c.is_numeric() {
                         next_non_number_index = i;
                         break;
                     }
@@ -89,19 +89,19 @@ fn are_packets_ordered(a: &Packet, b: &Packet) -> Option<bool> {
     if a_index == a.packets.len() {
         if b_index == b.packets.len() {
             // both packets same length. need to look further in parent packets
-            return None;
+            None
         } else {
             // a is shorter than b. packets is ordered
-            return Some(true);
+            Some(true)
         }
     } else {
-        return Some(false);
+        Some(false)
     }
 }
 
 fn part_a() {
     let ordered_index_sum: usize = read_lines("./day_13/input.txt")
-        .filter(|line| line != "")
+        .filter(|line| !line.is_empty())
         .map(|line| build_packet(&line.chars().collect(), &mut 0))
         .collect::<Vec<Packet>>()
         .chunks(2)
@@ -119,7 +119,7 @@ fn part_a() {
 
 fn part_b() {
     let mut packets: Vec<Packet> = read_lines("./day_13/input.txt")
-        .filter(|line| line != "")
+        .filter(|line| !line.is_empty())
         .map(|line| build_packet(&line.chars().collect(), &mut 0))
         .collect();
 

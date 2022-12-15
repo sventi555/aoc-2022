@@ -3,8 +3,8 @@ use std::{cell::RefCell, num::ParseIntError, str::FromStr};
 use utils::read_lines;
 
 enum OpVal {
-    NUM(u32),
-    OLD,
+    Num(u32),
+    Old,
 }
 
 impl FromStr for OpVal {
@@ -12,15 +12,15 @@ impl FromStr for OpVal {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "old" => Ok(OpVal::OLD),
-            _ => Ok(OpVal::NUM(s.parse().unwrap())),
+            "old" => Ok(OpVal::Old),
+            _ => Ok(OpVal::Num(s.parse().unwrap())),
         }
     }
 }
 
 enum OpFn {
-    ADD,
-    MULT,
+    Add,
+    Mult,
 }
 
 impl FromStr for OpFn {
@@ -28,8 +28,8 @@ impl FromStr for OpFn {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "+" => Ok(OpFn::ADD),
-            "*" => Ok(OpFn::MULT),
+            "+" => Ok(OpFn::Add),
+            "*" => Ok(OpFn::Mult),
             _ => Err(String::from("failed to parse OpFn")),
         }
     }
@@ -65,12 +65,12 @@ impl Monkey {
             .iter()
             .map(|item| {
                 let op_val = match self.op_val {
-                    OpVal::OLD => *item,
-                    OpVal::NUM(val) => val as u64,
+                    OpVal::Old => *item,
+                    OpVal::Num(val) => val as u64,
                 };
                 match self.op_fn {
-                    OpFn::ADD => item + op_val,
-                    OpFn::MULT => item * op_val,
+                    OpFn::Add => item + op_val,
+                    OpFn::Mult => item * op_val,
                 }
             })
             .collect();
@@ -80,7 +80,7 @@ impl Monkey {
         self.items = self.items.iter().map(|item| item / 3).collect();
     }
 
-    fn throw_a(&mut self, monkeys: &Vec<RefCell<Monkey>>) {
+    fn throw_a(&mut self, monkeys: &[RefCell<Monkey>]) {
         for item in &self.items {
             let throw_to = if item % self.test_val as u64 == 0 {
                 self.throw_to.0
@@ -93,7 +93,7 @@ impl Monkey {
         self.items.clear();
     }
 
-    fn throw_b(&mut self, monkeys: &Vec<RefCell<Monkey>>, modulo: u64) {
+    fn throw_b(&mut self, monkeys: &[RefCell<Monkey>], modulo: u64) {
         for item in &self.items {
             let throw_to = if item % self.test_val as u64 == 0 {
                 self.throw_to.0
@@ -114,25 +114,25 @@ impl From<&[String]> for Monkey {
     fn from(lines: &[String]) -> Self {
         let items = lines[1]
             .trim()
-            .split(" ")
+            .split(' ')
             .skip(2)
             .map(|num_with_comma| {
-                if num_with_comma.ends_with(",") {
-                    num_with_comma.strip_suffix(",").unwrap().parse().unwrap()
+                if num_with_comma.ends_with(',') {
+                    num_with_comma.strip_suffix(',').unwrap().parse().unwrap()
                 } else {
                     num_with_comma.parse().unwrap()
                 }
             })
             .collect();
 
-        let operation: Vec<&str> = lines[2].trim().split(" ").skip(4).collect();
+        let operation: Vec<&str> = lines[2].trim().split(' ').skip(4).collect();
         let op_fn = OpFn::from_str(operation[0]).unwrap();
         let op_val: OpVal = OpVal::from_str(operation[1]).unwrap();
 
-        let test_val: u32 = lines[3].trim().split(" ").last().unwrap().parse().unwrap();
+        let test_val: u32 = lines[3].trim().split(' ').last().unwrap().parse().unwrap();
 
-        let throw_1: u32 = lines[4].trim().split(" ").last().unwrap().parse().unwrap();
-        let throw_2: u32 = lines[5].trim().split(" ").last().unwrap().parse().unwrap();
+        let throw_1: u32 = lines[4].trim().split(' ').last().unwrap().parse().unwrap();
+        let throw_2: u32 = lines[5].trim().split(' ').last().unwrap().parse().unwrap();
         Monkey {
             items,
             op_val,
@@ -147,7 +147,7 @@ impl From<&[String]> for Monkey {
 fn part_a() {
     // chunky monkeys!
     let monkeys: Vec<RefCell<Monkey>> = read_lines("./day_11/input.txt")
-        .filter(|line| line != "")
+        .filter(|line| !line.is_empty())
         .collect::<Vec<String>>()
         .chunks(6)
         .map(|chunk| RefCell::new(chunk.into()))
@@ -165,7 +165,7 @@ fn part_a() {
         .map(|monkey| monkey.borrow().inspected)
         .collect::<Vec<u32>>();
 
-    inspected_nums.sort_by(|a, b| b.cmp(&a));
+    inspected_nums.sort_by(|a, b| b.cmp(a));
     let business = inspected_nums[0] * inspected_nums[1];
     println!("{}", business);
 }
@@ -173,16 +173,16 @@ fn part_a() {
 fn part_b() {
     // chunky monkeys!
     let monkeys: Vec<RefCell<Monkey>> = read_lines("./day_11/input.txt")
-        .filter(|line| line != "")
+        .filter(|line| !line.is_empty())
         .collect::<Vec<String>>()
         .chunks(6)
         .map(|chunk| RefCell::new(chunk.into()))
         .collect();
 
-    let lowest_common_mult = monkeys
+    let lowest_common_mult: u32 = monkeys
         .iter()
         .map(|monkey| monkey.borrow().test_val)
-        .fold(1, |prod, val| prod * val);
+        .product();
 
     for _ in 0..10000 {
         for monkey in &monkeys {
@@ -198,7 +198,7 @@ fn part_b() {
         .map(|monkey| monkey.borrow().inspected as u64)
         .collect();
 
-    inspected_nums.sort_by(|a, b| b.cmp(&a));
+    inspected_nums.sort_by(|a, b| b.cmp(a));
     let business = inspected_nums[0] * inspected_nums[1];
     println!("{}", business);
 }
