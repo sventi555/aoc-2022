@@ -2,6 +2,17 @@ use std::collections::{HashMap, VecDeque};
 
 use utils::read_lines;
 
+fn geode_limit(geodes: u32, rate: u32, time: u32) -> u32 {
+    let mut cur = geodes;
+    let mut rate = rate;
+    for _ in 0..time {
+        cur += rate;
+        rate += 1;
+    }
+
+    cur
+}
+
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 struct State {
     time: u32,
@@ -13,6 +24,7 @@ struct State {
     clay_robot: u32,
     obsidian_robot: u32,
     geode_robot: u32,
+    skipped: bool,
 }
 
 impl State {
@@ -26,6 +38,7 @@ impl State {
         clay_robot: u32,
         obsidian_robot: u32,
         geode_robot: u32,
+        skipped: bool,
     ) -> Self {
         State {
             time,
@@ -37,6 +50,7 @@ impl State {
             clay_robot,
             obsidian_robot,
             geode_robot,
+            skipped,
         }
     }
 }
@@ -51,11 +65,17 @@ struct Blueprint {
 }
 
 impl Blueprint {
+    // the REAL big time saver here is `skipped_over_before` because it prunes
+    // worse performing permutations early on. The other time savers
+    // - checking the max geodes in best case scenario
+    // - not building more robots than are needed for most expensive recipe
+    // - not skipping if we are able to build at least one robot
+    // help out a bit, but not NEARLY as much as the `skipped_over_before` trick
     fn max_yield(&self, time: u32) -> u32 {
         let mut queue: VecDeque<State> = VecDeque::new();
         let mut max_geodes = 0;
 
-        let start = State::new(time, 0, 0, 0, 0, 1, 0, 0, 0);
+        let start = State::new(time, 0, 0, 0, 0, 1, 0, 0, 0, false);
         queue.push_back(start);
 
         while !queue.is_empty() {
@@ -64,17 +84,19 @@ impl Blueprint {
                 max_geodes = cur.geode;
             }
 
-            if cur.time >= 1 {
-                let next = State {
+            // end early if we can't beat our record in the absolute best scenario
+            if cur.time >= 1 && geode_limit(cur.geode, cur.geode_robot, cur.time) > max_geodes {
+                let mut next = State {
                     time: cur.time - 1,
                     ore: cur.ore + cur.ore_robot,
                     clay: cur.clay + cur.clay_robot,
                     obsidian: cur.obsidian + cur.obsidian_robot,
                     geode: cur.geode + cur.geode_robot,
+                    skipped: false,
                     ..cur
                 };
 
-                // try making geode robot
+                // ALWAYS make a geode robot if able
                 if cur.ore >= self.geode_recipe.0 && cur.obsidian >= self.geode_recipe.1 {
                     let mut next = next.clone();
                     next.ore -= self.geode_recipe.0;
@@ -86,7 +108,11 @@ impl Blueprint {
                 }
 
                 // try making obsidian robot
-                if cur.obsidian_robot < self.geode_recipe.1
+                let skipped_over_before = cur.skipped
+                    && cur.ore - cur.ore_robot >= self.obsidian_recipe.0
+                    && cur.clay - cur.clay_robot >= self.obsidian_recipe.1;
+                if !skipped_over_before
+                    && cur.obsidian_robot < self.geode_recipe.1
                     && cur.ore >= self.obsidian_recipe.0
                     && cur.clay >= self.obsidian_recipe.1
                 {
@@ -95,14 +121,15 @@ impl Blueprint {
                     next.clay -= self.obsidian_recipe.1;
                     next.obsidian_robot += 1;
                     queue.push_back(next);
-
-                    if cur.obsidian_robot == 0 {
-                        continue;
-                    }
                 }
 
                 // try making clay robot
-                if cur.clay_robot < self.obsidian_recipe.1 && cur.ore >= self.clay_recipe {
+                let skipped_over_before =
+                    cur.skipped && cur.ore - cur.ore_robot >= self.clay_recipe;
+                if !skipped_over_before
+                    && cur.clay_robot < self.obsidian_recipe.1
+                    && cur.ore >= self.clay_recipe
+                {
                     let mut next = next.clone();
                     next.ore -= self.clay_recipe;
                     next.clay_robot += 1;
@@ -110,14 +137,28 @@ impl Blueprint {
                 }
 
                 // try making ore robot
-                if cur.ore_robot < self.clay_recipe && cur.ore >= self.ore_recipe {
+                let skipped_over_before = cur.skipped && cur.ore - cur.ore_robot >= self.ore_recipe;
+                if !skipped_over_before
+                    && cur.time > self.ore_recipe
+                    && cur.ore_robot < self.clay_recipe
+                    && cur.ore >= self.ore_recipe
+                {
                     let mut next = next.clone();
                     next.ore -= self.ore_recipe;
                     next.ore_robot += 1;
                     queue.push_back(next);
                 }
 
-                queue.push_back(next);
+                if cur.ore < self.ore_recipe
+                    || cur.ore < self.clay_recipe
+                    || cur.ore < self.obsidian_recipe.0
+                    || cur.clay < self.obsidian_recipe.1
+                    || cur.ore < self.geode_recipe.0
+                    || cur.obsidian < self.geode_recipe.1
+                {
+                    next.skipped = true;
+                    queue.push_back(next);
+                }
             }
         }
 
@@ -149,7 +190,6 @@ fn part_a() {
     let quality_sum: u32 = read_lines("./day_19/input.txt")
         .map(|line| {
             let blueprint: Blueprint = line.into();
-            println!("{}", blueprint.id);
             blueprint.max_yield(24) * blueprint.id
         })
         .sum();
@@ -162,8 +202,8 @@ fn part_b() {
         .take(3)
         .map(|line| {
             let blueprint: Blueprint = line.into();
-            println!("{}", blueprint.id);
-            blueprint.max_yield(32)
+            let max_yield = blueprint.max_yield(32);
+            max_yield
         })
         .product();
     println!("{quality_product}");
@@ -171,5 +211,5 @@ fn part_b() {
 
 fn main() {
     part_a();
-    // part_b();
+    part_b();
 }
