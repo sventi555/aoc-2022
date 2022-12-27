@@ -71,6 +71,8 @@ impl Blueprint {
     // - not building more robots than are needed for most expensive recipe
     // - not skipping if we are able to build at least one robot
     // help out a bit, but not NEARLY as much as the `skipped_over_before` trick
+    //
+    // Some pruning strategies inspired by this comment - https://www.reddit.com/r/adventofcode/comments/zs4m2w/comment/j168tiq/?utm_source=share&utm_medium=web2x&context=3
     fn max_yield(&self, time: u32) -> u32 {
         let mut queue: VecDeque<State> = VecDeque::new();
         let mut max_geodes = 0;
